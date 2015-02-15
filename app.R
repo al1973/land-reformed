@@ -4,12 +4,14 @@ library(shinydashboard)
 library(rCharts)
 library(reshape2)
 library(rjson)
+library(DT)
+library(dplyr)
 options(RCHART_WIDTH = 600)
 dat <- read.csv('./data/dimple.csv')
 pro <-read.csv('./data/production2014.csv')
 reg <- read.csv('./data/region.csv')
 top <- read.csv('./data/top5port.csv')
-
+port <- read.csv('./data/porttable.csv')
 ui <- dashboardPage(
   dashboardHeader(title = "Port Wine Data",
                   dropdownMenu(type = "messages",
@@ -70,9 +72,12 @@ ui <- dashboardPage(
           menuItem("High Chart", tabName = "highchart", icon = icon("bar-chart")),
           menuItem("NVD3", tabName = "NVD3", icon = icon("bar-chart")),
           menuItem("Leaflet", tabName = "leaflet",icon = icon("map-marker")),
+          menuItem("DT", tabName = "DT", icon = icon("bar-chart")),
           menuItem("Source code", icon = icon("file-code-o"), 
                    href = "https://github.com/al1973/land-reformed"),
+          menuItem("Data source", icon = icon("file-code-o"), href = "http://ivdp.pt/"),
           menuItem(sidebarSearchForm(textId = "searchText", buttonId = "searchButton", label = "Search..."))
+      
           )
   ),
   
@@ -154,7 +159,9 @@ ui <- dashboardPage(
                             "typically referred to as Douro wines. ",
                             "The Douro DOC has three sub-regions: Baixo Corgo, ",
                             "Cima Corgo, and Douro Superior, ",
-                            "and the special designation Moscatel do Douro.")
+                            "and the special designation Moscatel do Douro. ",
+                            "All data comes from the Instituto dos Vinhos do Douro e Porto: ",
+                            "www.ivdp.pt")
               )
        ),
     
@@ -167,7 +174,12 @@ ui <- dashboardPage(
                 collapsible = TRUE,
                 tableOutput("top5")
                 )   
-      )
+      ),
+      
+      #sixth tab
+      tabItem(tabName = "DT",
+              dataTableOutput('dt')
+              )
     )
   )
 )
@@ -229,6 +241,12 @@ server <- function(input, output) {
     douro$marker(c(41.158450, -7.783655), bindPopup = "<p>Wine producing area all around here>")
     douro$marker(c(41.0798611, -7.112333), bindPopup = "<p> And here </p>")
     return(douro)
+  })
+  
+  
+  output$dt <- renderDataTable({
+    dt <- datatable(port, options = list(iDisplayLength = 5))
+    return(dt)
   })
   
   output$orderNum <- renderText({ 10*2 })
