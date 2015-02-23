@@ -8,10 +8,13 @@ library(DT)
 library(dplyr)
 options(RCHART_WIDTH = 600)
 dat <- read.csv('./data/dimple.csv')
+not<- read.csv('./data/not_special.csv')
 pro <-read.csv('./data/production2014.csv')
 reg <- read.csv('./data/region.csv')
 top <- read.csv('./data/top5port.csv')
-port <- read.csv('./data/porttable.csv')
+port <- read.csv('./data/porttable.csv', check.names = FALSE)
+#port<-formatC(port$percent.change, digits = 2, format = "f")
+ 
 ui <- dashboardPage(
   dashboardHeader(title = "Port Wine Data",
                   dropdownMenu(type = "messages",
@@ -122,6 +125,7 @@ ui <- dashboardPage(
               h2("Dimple Graph"),
               h3("Port Wine Sales 2013 Top 10 Countries"),
               showOutput("d1", "dimple"),
+              showOutput("d2", "dimple"),
               box(
                 title = "Summary 2013", status = "primary", width=9, solidHeader = TRUE,
                 collapsible = TRUE,
@@ -208,6 +212,14 @@ server <- function(input, output) {
     return(d1)
     })
   
+  output$d2 <- renderChart2({
+    d2 <- dPlot(x = "percent", y = "country", groups = "wine", data = not, type = "bar")
+    d2$xAxis(type = "addPctAxis")
+    d2$yAxis(type = "addCategoryAxis", orderRule = "country")
+    d2$legend( x = 5, y = 5, width = 600, height = 25, horizontalAlign = "left", orderRule = "wine")
+    return(d2)
+    })
+  
   output$high <- renderChart2({
     selected <- input$region
     region <- subset(reg, region == selected & year %in% seq(input$range[1], input$range[2], 1))
@@ -245,6 +257,7 @@ server <- function(input, output) {
   
   
   output$dt <- renderDataTable({
+  
     dt <- datatable(port, options = list(iDisplayLength = 5))
     return(dt)
   })
