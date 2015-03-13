@@ -1,4 +1,6 @@
 ## app.R ##
+
+## load required libraries ##
 library(shiny)
 library(shinydashboard)
 library(rCharts)
@@ -6,15 +8,19 @@ library(reshape2)
 library(rjson)
 library(DT)
 library(dplyr)
+
 options(RCHART_WIDTH = 600)
-dat <- read.csv('./data/dimple.csv')
+
+## read in the data files ##
+spec <- read.csv('./data/special.csv')
 not<- read.csv('./data/not_special.csv')
 pro <-read.csv('./data/production2014.csv')
 reg <- read.csv('./data/region.csv')
 top <- read.csv('./data/top5port.csv')
 port <- read.csv('./data/porttable.csv', check.names = FALSE)
-#port<-formatC(port$percent.change, digits = 2, format = "f")
- 
+
+## UI code##
+## creating a dashboard ##
 ui <- dashboardPage(
   dashboardHeader(title = "Port Wine Data",
                   dropdownMenu(type = "messages",
@@ -74,7 +80,6 @@ ui <- dashboardPage(
           menuItem("Dimple", icon = icon("bar-chart"), tabName = "dimple"),
           menuItem("High Chart", tabName = "highchart", icon = icon("bar-chart")),
           menuItem("NVD3", tabName = "NVD3", icon = icon("bar-chart")),
-          menuItem("Leaflet", tabName = "leaflet",icon = icon("map-marker")),
           menuItem("DT", tabName = "DT", icon = icon("bar-chart")),
           menuItem("Source code", icon = icon("file-code-o"), 
                    href = "https://github.com/al1973/land-reformed"),
@@ -86,7 +91,7 @@ ui <- dashboardPage(
   
   dashboardBody(
     tabItems(
-      # First tab content
+      # First tab content, a brief summary
       tabItem(tabName = "portwinedata",
               fluidRow(
                 box(
@@ -133,15 +138,7 @@ ui <- dashboardPage(
               )
       ),
       
-      # Third tab content
-      tabItem(tabName = "leaflet",
-              h2("Leaflet Maps"),
-              showOutput('cavemap', 'leaflet'),
-              br(),
-              showOutput('douro', 'leaflet')
-      ),
-      
-      # Fourth tab content
+      # Third tab content, demonstrating a high chart
       tabItem(tabName = "highchart",          
               showOutput("high", "highcharts"),
               box(title="Region & Year", width=6, status = "primary", solidHeader = TRUE,
@@ -169,7 +166,7 @@ ui <- dashboardPage(
               )
        ),
     
-      #Fifth tab content
+      #Fourth tab content, demonstrating an NVD3 Chart
       tabItem(tabName = "NVD3",
               h2("NVD3 Graph"),
               showOutput('n', 'nvd3'),
@@ -180,7 +177,7 @@ ui <- dashboardPage(
                 )   
       ),
       
-      #sixth tab
+      #fifth tab, demonstrating Data tables
       tabItem(tabName = "DT",
               dataTableOutput('dt')
               )
@@ -188,38 +185,42 @@ ui <- dashboardPage(
   )
 )
 
+## server code ##
 server <- function(input, output) {
-  # Generate a summary of the dataset
+  ## first tab ##      
+  # Generate a summary of the 2014 dataset for first tab unformattd from .csv file
   output$summary <- renderPrint({
     summary(pro)
   }) 
   
-  # Show the first "n" observations
+  # Show the first "n" observations in a table with ability to select number of obseervations
   output$view <- renderTable({
     head(pro, n = input$obs)
   })
   
-  # Show the first "n" observations
-  output$sum <- renderPrint({
-    str(dat)
-  })
-  
+  ## code to display the "Dimple" graphs on the second tab ## 
   output$d1 <- renderChart2({
-    d1 <- dPlot(x = "percent", y = "country", groups = "wine", data = dat, type = "bar")
+    d1 <- dPlot(x = "percent.euro", y = "Country", groups = "Porto", data = spec, type = "bar")
     d1$xAxis(type = "addPctAxis")
-    d1$yAxis(type = "addCategoryAxis", orderRule = "country")
-    d1$legend( x = 5, y = 5, width = 600, height = 25, horizontalAlign = "left", orderRule = "wine")
+    d1$yAxis(type = "addCategoryAxis", orderRule = "Country")
+    d1$legend( x = 5, y = 5, width = 600, height = 25, horizontalAlign = "left", orderRule = "Porto")
     return(d1)
     })
   
   output$d2 <- renderChart2({
-    d2 <- dPlot(x = "percent", y = "country", groups = "wine", data = not, type = "bar")
+    d2 <- dPlot(x = "percent.euro", y = "Country", groups = "Porto", data = not, type = "bar")
     d2$xAxis(type = "addPctAxis")
-    d2$yAxis(type = "addCategoryAxis", orderRule = "country")
-    d2$legend( x = 5, y = 5, width = 600, height = 25, horizontalAlign = "left", orderRule = "wine")
+    d2$yAxis(type = "addCategoryAxis", orderRule = "Country")
+    d2$legend( x = 5, y = 5, width = 600, height = 25, horizontalAlign = "left", orderRule = "Porto")
     return(d2)
     })
   
+  ## Show a summary of the .csv file for the second "dimple" graph ##
+  output$sum <- renderPrint({
+          str(not)
+  })
+  
+  ## code to display the "High Chart" on the third tab ##
   output$high <- renderChart2({
     selected <- input$region
     region <- subset(reg, region == selected & year %in% seq(input$range[1], input$range[2], 1))
@@ -229,39 +230,24 @@ server <- function(input, output) {
     return(high)
   })
   
-  # Show the first 5 observations of NVD3 graph
-  output$top5 <- renderTable({
-    head(top)
-  })
-  
+  ## code to display the "NVD3" graph on the fourth tab ##
   output$n <- renderChart2({
     n <- nPlot(x = "country", y = "price", group = "year", data = top, type = "multiBarChart")
     return(n)
   })
-    
-  output$cavemap <- renderChart2({
-    cavemap <- Leaflet$new()
-    cavemap$setView(c(41.145039, -8.609508), zoom = 13)
-    cavemap$marker(c(41.1381972, -8.6109222), bindPopup = "<p> Port wine cellars all around here </p>")
-    cavemap$marker(c(41.161093, -8.633026), bindPopup = "<p> Hi. I am here: R Vanzeleres, 301 </p>")
-    return(cavemap)
+  ## Show the first 5 observations of NVD3 graph below the chart ##
+  output$top5 <- renderTable({
+          head(top)
   })
   
-  output$douro <- renderChart2({
-    douro <- Leaflet$new()
-    douro$setView(c(41.158450, -7.783655), zoom = 9)
-    douro$marker(c(41.158450, -7.783655), bindPopup = "<p>Wine producing area all around here>")
-    douro$marker(c(41.0798611, -7.112333), bindPopup = "<p> And here </p>")
-    return(douro)
-  })
-  
-  
+  ## code to display the "Data Table" on the fifth tab ##
   output$dt <- renderDataTable({
-  
-    dt <- datatable(port, options = list(iDisplayLength = 5))
+    dt <- datatable(port, options = list(pageLength = 10),rownames = FALSE, caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: center;','Table 1: ', htmltools::em('Change in Port Wine Sales 2006 to 2013.')))
     return(dt)
   })
-  
+ 
+  ## values shown on value boxes on first tab ##
   output$orderNum <- renderText({ 10*2 })
   
   output$progress <- renderText({ "75%" })
