@@ -80,20 +80,18 @@ ui <- dashboardPage(skin="black",
                                     collapsible = TRUE,
                                     verbatimTextOutput("table1")
                                 ),
-
                                 box(
-                                    title = "Country vs Cases", status = "primary", solidHeader = TRUE,
-                                    collapsible = TRUE,
-                                    tableOutput("table5")
+                                        title = "Country vs Cases", status = "primary", solidHeader = TRUE,
+                                        collapsible = TRUE,
+                                        dataTableOutput("dt1")
                                 )
                                 )
-                        ),
-                        
+                                ),
 
                         ## fourth tab content ##
                         tabItem(tabName = "DT",
                                 dataTableOutput('dt')
-                        )
+                                )
                 )
         )
 )
@@ -116,17 +114,19 @@ server <- function(input, output) {
         
         # Show the first 6 observations of aspirin vs outcome
         output$table2 <- renderTable({
-                head(table2)
+                head(table2, n=10)
         })
         
         # Show the first 6 observations of heparin vs outcome
         output$table3 <- renderTable({
-                head(table3)
+                head(table3,n=15)
         })
         
-        # Show the first 6 observations of heparin vs outcome
-        output$table5 <- renderTable({
-                head(table5)
+        # Show a data table of country vs no. cases
+        output$dt1 <- renderDataTable({
+        dt1 <- datatable(table5, options = list(pageLength = 10),rownames = FALSE, caption = htmltools::tags$caption(
+                style = 'caption-side: bottom; text-align: center;','Table 1: ', htmltools::em('Country with number of cases')))
+        return(dt1)
         })
         
         # Generate a summary of sex vs 6 month outcome
@@ -134,22 +134,23 @@ server <- function(input, output) {
                 str(table4)
         })
         
+## nvd3 charts not used  ##        
+#         output$n <- renderChart2({
+#                n <- nPlot(x = "stroke", y = "n", group = "outcome", data = table1, type = "multiBarChart")
+#                return(n)
+#         })
+#         
+#         output$n1 <- renderChart2({
+#                 n1 <- nPlot(x = "heparin", y = "cases", group = "outcome", data = table3, type = "multiBarChart")
+#                 return(n1)
+#         })
+#         
+#         output$n2 <- renderChart2({
+#                 n2 <- nPlot(x = "aspirin", y = "cases", group = "outcome", data = table2, type = "multiBarChart")
+#                 return(n2)
+#         })
         
-        output$n <- renderChart2({
-               n <- nPlot(x = "stroke", y = "n", group = "outcome", data = table1, type = "multiBarChart")
-               return(n)
-        })
-        
-        output$n1 <- renderChart2({
-                n1 <- nPlot(x = "heparin", y = "cases", group = "outcome", data = table3, type = "multiBarChart")
-                return(n1)
-        })
-        
-        output$n2 <- renderChart2({
-                n2 <- nPlot(x = "aspirin", y = "cases", group = "outcome", data = table2, type = "multiBarChart")
-                return(n2)
-        })
-        
+# dimple graph #
         output$d1 <- renderChart2({
               d1 <- dPlot(x = "outcome", y = "cases", groups = "sex", data = table4, type = "bar")
               d1$yAxis(type = "addPctAxis")
@@ -157,10 +158,12 @@ server <- function(input, output) {
               d1$legend( x = 5, y = 5, width = 600, height = 25, horizontalAlign = "left", orderRule = "Porto")
               return(d1)
         })
-        
+# data table #        
         output$dt <- renderDataTable({
-                dt <- datatable(subist, options = list(pageLength = 10),rownames = FALSE, caption = htmltools::tags$caption(
-                        style = 'caption-side: bottom; text-align: center;','Table 1: ', htmltools::em('Subset of patient data from the International Stroke Trial')))
+                ## subset of data with country = portugal ##
+                table6<-filter(subist, country == "PORT")
+                dt <- datatable(table6, options = list(pageLength = 10),rownames = FALSE, caption = htmltools::tags$caption(
+                        style = 'caption-side: bottom; text-align: center;','Table 2: ', htmltools::em('Subset of patient data for Portugal only')))
                 return(dt)
         })
        
