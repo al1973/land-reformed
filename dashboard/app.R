@@ -242,7 +242,7 @@ server <- function(input, output) {
   
   ## code to display the "Data Table" on the fifth tab ##
   output$dt <- renderDataTable({
-    dt <- datatable(port, options = list(pageLength = 10),rownames = FALSE, caption = htmltools::tags$caption(
+    dt <- datatable(port, options = list(pageLength = 10),rownames = FALSE, extensions="Responsive", caption = htmltools::tags$caption(
             style = 'caption-side: bottom; text-align: center;','Table 1: ', htmltools::em('Change in Port Wine Sales 2006 to 2013.')))
     return(dt)
   })
