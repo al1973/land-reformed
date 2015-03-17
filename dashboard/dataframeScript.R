@@ -4,7 +4,7 @@
 # load libraries necessary for formatting the files
 library(xlsx)
 library(dplyr)
-# read in the fies and give them descriptive names
+# read in the files and give them descriptive names
 port06<-read.xlsx("PortSales2006.xlsx",1)
 names(port06)<-c("country","vinho","year","litros","euros", "euro.litro")
 port13<-read.xlsx("PortSales2013.xlsx",1)
