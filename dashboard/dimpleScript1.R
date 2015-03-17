@@ -1,10 +1,14 @@
+## script to tidy data for first dimple graph ##
+## the data is downloaded from www.ivdp.pt as an .xls file  ##
+#save the .xls file as a .csv file and read it in
+spec<-read.csv("special2013.csv", header=FALSE,as.is=1:22) 
 #load required R libraries
 library(dplyr)
-#save te .xls file as a .csv file and read in
-spec<-read.csv("special2013.csv", header=FALSE,as.is=1:22) 
+# rename the columns
 names(spec)<-c("Country","Litros","€","€/l","Litros","€","€/l","Litros","€","€/l","Litros","€","€/l","Litros","€","€/l","Litros","€","€/l","Litros","€","€/l")
-spec<-spec[-c(1:5),]      # remove unwanted rows, 1 to 4
-spec<-spec[,c(1:22)]
+spec<-spec[-c(1:5),]      # remove unwanted rows, 1 to 5
+spec<-spec[,c(1:22)]      # creates unique names for columns
+# Add new cols for port types
 spec$Porto<-"Vintage"
 spec$Porto.1<-"LBV"
 spec$Porto.2<-"Colheitas"
@@ -12,6 +16,7 @@ spec$Porto.3<-"Indicação de Idade"
 spec$Porto.4<-"Reserva"
 spec$Porto.5<-"Reserva Tawny"
 spec$Porto.6<-"Crusted"
+# Add a country column for each wine type
 spec$Country.1<-c("Alemanha","Bélgica","Canadá","Dinamarca","Espanha","EUA","França","Holanda","Portugal","Reino Unido","TOTAIS")
 spec$Country.2<-c("Alemanha","Bélgica","Canadá","Dinamarca","Espanha","EUA","França","Holanda","Portugal","Reino Unido","TOTAIS")
 spec$Country.3<-c("Alemanha","Bélgica","Canadá","Dinamarca","Espanha","EUA","França","Holanda","Portugal","Reino Unido","TOTAIS")
@@ -34,6 +39,7 @@ names(spec)<-c("Country","Porto","Litros","€","€/l",
                "Country","Porto","Litros","€","€/l",
                "Country","Porto","Litros","€","€/l",
                "Country","Porto","Litros","€","€/l")
+#create individual data frames for each of the wine types
 a<-data.frame(spec[1:5])
 b<-data.frame(spec[6:10])
 c<-data.frame(spec[11:15])
@@ -41,8 +47,13 @@ d<-data.frame(spec[16:20])
 e<-data.frame(spec[21:25])
 f<-data.frame(spec[26:30])
 g<-data.frame(spec[31:35])
+
+# row bind the data frames ie create a narrow data set instead of wide
 spec<-rbind(a,b,c,d,e,f,g)
+
 spec<-filter(spec,Litros!="---") #remove empty values
+
+#for each country calculate the percentage
 al<-filter(spec,Country=="Alemanha")#filter out individual countries
 al$X.<-as.numeric(al$X.) # make Euro col numeric
 tot<-sum(al$X.) #get total for each country
@@ -98,8 +109,11 @@ to$X.<-as.numeric(to$X.) # make Euro col numeric
 tot<-sum(to$X.) #get total for each country
 to<-mutate(to,percent.euro=round((X./tot)*100,digits=2))
 
+# again bind the rows, this time with a percentage column
 spec<-rbind(al,be,ca,di,es,eu,fr,ho,po,ru,to)
+#select only the columns needed
 spec<- select(spec,Country,Porto,X.,X..l,percent.euro)
+#rename the columns
 spec<-rename(spec,sales.euro=X.,preço.litro=X..l)
 # write a .csv file to  be used in the app script
 write.csv(spec,"special.csv")

@@ -1,9 +1,12 @@
-#save .xlsx file as a .csv file
+## script to tidy data for second dimple graph ##
+## the data is downloaded from www.ivdp.pt as an .xls file  ##
+## run the script with r
+#save the .xls file as a .csv file and read it in to r
 not<-read.csv("notspecial2013.csv", header=FALSE,as.is=1:13) 
 names(not)<-c("Country","Litros","€","€/l","Litros","€","€/l","Litros","€","€/l","Litros","€","€/l")  #set col names
 not<-not[-c(1:5),]      # remove unwanted rows, 1 to 4
 not<-not[,c(1:13)] 	#creates unique names for columns
-# Add new cols for port types
+# Add new cols for port types and countries
 not$Porto<-"Branco"
 not$Porto.1<-"Tawny"
 not$Porto.2<-"Ruby"
@@ -13,13 +16,18 @@ not$Country.2<-c("Alemanha","Bélgica","Canadá","Dinamarca","Espanha","EUA","Fr
 not$Country.3<-c("Alemanha","Bélgica","Canadá","Dinamarca","Espanha","EUA","França","Holanda","Portugal","ReinoUnido","TOTAIS")
 # Reorder cols
 not <- not[, c("Country","Porto","Litros","€","€/l","Country.1","Porto.1","Litros.1","€.1","€/l.1","Country.2","Porto.2","Litros.2","€.2","€/l.2","Country.3","Porto.3","Litros.3","€.3","€/l.3")]
+#rename columns
 names(not)<-c("Country","Porto","Litros","€","€/l","Country","Porto","Litros","€","€/l","Country","Porto","Litros","€","€/l","Country","Porto","Litros","€","€/l")
+#create individual data frames for each of the wine types
 a<-data.frame(not[1:5])
 b<-data.frame(not[6:10])
 c<-data.frame(not[11:15])
 d<-data.frame(not[16:20])
+
+#row bind the data frames ie create a narrow data set instead of wide
 not<-rbind(a,b,c,d)
 
+#for each country calculate the percentage
 al<-filter(not,Country=="Alemanha")#filter out individual countries
 al$X.<-as.numeric(al$X.) # make Euro col numeric
 tot<-sum(al$X.) #get total for each country
@@ -75,7 +83,11 @@ to$X.<-as.numeric(to$X.) # make Euro col numeric
 tot<-sum(to$X.) #get total for each country
 to<-mutate(to,percent.euro=round((X./tot)*100,digits=2))
 
+# again bind the rows, this time with a percentage column
 not<-rbind(al,be,ca,di,es,eu,fr,ho,po,ru,to)
+#select only the columns needed
 not<- select(not,Country,Porto,X.,percent.euro)
+#rename the columns
 not<-rename(not,sales.euro=X.)
+# write a .csv file to  be used in the app script
 write.csv(not,"not_special.csv")
